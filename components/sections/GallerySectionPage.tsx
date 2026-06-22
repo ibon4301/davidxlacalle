@@ -223,11 +223,6 @@ export default function GallerySectionPage({
                     <Calendar className="size-4" />
                     {section.featuredPhoto.date}
                   </span>
-
-                  <span className="inline-flex items-center gap-2">
-                    <Camera className="size-4" />
-                    {section.photos.length} fotografías
-                  </span>
                 </div>
               </div>
             </article>

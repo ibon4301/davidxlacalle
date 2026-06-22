@@ -4,6 +4,7 @@ import {
   type GallerySectionType,
   type SectionPhoto,
 } from "@/lib/gallerySections";
+import { supabase } from "@/lib/supabaseClient";
 
 export type CmsPhoto = SectionPhoto & {
   id: string;
@@ -19,6 +20,17 @@ export type CmsGallerySection = {
   intro: string;
   featuredPhoto: CmsPhoto;
   photos: CmsPhoto[];
+};
+
+type SupabasePhotoRow = {
+  id: string;
+  title: string;
+  section_type: GallerySectionType;
+  location: string | null;
+  photo_date: string | null;
+  image_url: string;
+  featured: boolean;
+  sort_order: number;
 };
 
 function mapPhotoToCmsPhoto(
@@ -57,14 +69,93 @@ function mapSectionToCmsSection(section: GallerySection): CmsGallerySection {
   };
 }
 
+function mapSupabasePhotoToCmsPhoto(photo: SupabasePhotoRow): CmsPhoto {
+  return {
+    id: photo.id,
+    type: photo.section_type,
+    featured: photo.featured,
+    order: photo.sort_order,
+    title: photo.title,
+    location: photo.location ?? "",
+    date: photo.photo_date ?? "",
+    image: photo.image_url,
+  };
+}
+
+function getFallbackSection(type: GallerySectionType): CmsGallerySection {
+  return mapSectionToCmsSection(gallerySections[type]);
+}
+
+async function getPhotosFromSupabase(
+  type: GallerySectionType,
+): Promise<CmsPhoto[]> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select(
+      "id, title, section_type, location, photo_date, image_url, featured, sort_order",
+    )
+    .eq("section_type", type)
+    .eq("is_active", true)
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error(`Error loading photos from Supabase for ${type}:`, error);
+    return [];
+  }
+
+  return (data ?? []).map((photo) =>
+    mapSupabasePhotoToCmsPhoto(photo as SupabasePhotoRow),
+  );
+}
+
 export async function getGallerySectionByType(
   type: GallerySectionType,
 ): Promise<CmsGallerySection> {
-  const section = gallerySections[type];
+  const fallbackSection = getFallbackSection(type);
+  const photos = await getPhotosFromSupabase(type);
 
-  return mapSectionToCmsSection(section);
+  if (photos.length === 0) {
+    return fallbackSection;
+  }
+
+  const featuredPhoto =
+    photos.find((photo) => photo.featured) ?? fallbackSection.featuredPhoto;
+
+  const gridPhotos = photos.filter((photo) => !photo.featured);
+
+  return {
+    ...fallbackSection,
+    featuredPhoto,
+    photos: gridPhotos.length > 0 ? gridPhotos : fallbackSection.photos,
+  };
 }
 
 export async function getAllGallerySections(): Promise<CmsGallerySection[]> {
-  return Object.values(gallerySections).map(mapSectionToCmsSection);
+  const sectionTypes = Object.keys(gallerySections) as GallerySectionType[];
+
+  return Promise.all(
+    sectionTypes.map((type) => getGallerySectionByType(type)),
+  );
+}
+
+export async function getAdminPhotos(): Promise<CmsPhoto[]> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select(
+      "id, title, section_type, location, photo_date, image_url, featured, sort_order",
+    )
+    .eq("is_active", true)
+    .order("section_type", { ascending: true })
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Error loading admin photos from Supabase:", error);
+    return [];
+  }
+
+  return (data ?? []).map((photo) =>
+    mapSupabasePhotoToCmsPhoto(photo as SupabasePhotoRow),
+  );
 }
