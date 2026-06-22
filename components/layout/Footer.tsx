@@ -105,7 +105,7 @@ export default function Footer() {
         <Separator className="my-10 bg-primary-foreground/10" />
 
         <div className="flex flex-col justify-between gap-4 text-sm text-primary-foreground/50 md:flex-row">
-          <p>© 2026 David Lacalle. Todos los derechos reservados.</p>
+          <p>© 2026 David Canales. Todos los derechos reservados.</p>
 
           <div className="flex flex-col gap-2 md:items-end">
             <p>Fotoperiodismo · Eventos · Actualidad · Documental</p>
