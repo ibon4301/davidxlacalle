@@ -1,6 +1,8 @@
 import GallerySectionPage from "@/components/sections/GallerySectionPage";
-import { gallerySections } from "@/lib/gallerySections";
+import { getGallerySectionByType } from "@/lib/galleryService";
 
-export default function PoliticaPage() {
-  return <GallerySectionPage section={gallerySections.politica} />;
+export default async function PoliticaPage() {
+  const section = await getGallerySectionByType("politica");
+
+  return <GallerySectionPage section={section} />;
 }

@@ -1,8 +1,8 @@
 import GallerySectionPage from "@/components/sections/GallerySectionPage";
-import { gallerySections } from "@/lib/gallerySections";
+import { getGallerySectionByType } from "@/lib/galleryService";
 
-export default function FiestasTradicionalesPage() {
-  return (
-    <GallerySectionPage section={gallerySections["fiestas-tradicionales"]} />
-  );
+export default async function FiestasTradicionalesPage() {
+  const section = await getGallerySectionByType("fiestas-tradicionales");
+
+  return <GallerySectionPage section={section} />;
 }

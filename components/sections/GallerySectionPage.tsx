@@ -7,7 +7,7 @@ import Reveal from "@/components/animations/Reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { GallerySection } from "@/lib/gallerySections";
+import type { CmsGallerySection } from "@/lib/galleryService";
 import {
   Calendar,
   Camera,
@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 type GallerySectionPageProps = {
-  section: GallerySection;
+  section: CmsGallerySection;
 };
 
 type SlideDirection = "next" | "previous";
