@@ -28,7 +28,7 @@ export default function Navbar() {
           </span>
 
           <div className="leading-tight">
-            <p className="font-serif text-xl font-semibold">David Lacalle</p>
+            <p className="font-serif text-xl font-semibold">David Canales</p>
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
               Fotoperiodista
             </p>

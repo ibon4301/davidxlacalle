@@ -84,12 +84,12 @@ export const gallerySections: Record<GallerySectionType, GallerySection> = {
         image:
           "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=1400&auto=format&fit=crop",
       },
-      {
+     {
         title: "Debate público",
         location: "España",
         date: "2024",
         image:
-          "https://images.unsplash.com/photo-1515168833906-d2a3b82b302b?q=80&w=1400&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1400&auto=format&fit=crop",
       },
       {
         title: "Sala de prensa",
@@ -126,7 +126,7 @@ export const gallerySections: Record<GallerySectionType, GallerySection> = {
         location: "España",
         date: "2024",
         image:
-          "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1400&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=80&w=1400&auto=format&fit=crop",
       },
       {
         title: "Competición urbana",

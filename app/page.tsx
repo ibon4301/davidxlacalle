@@ -145,7 +145,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-7 max-w-2xl text-lg">
-              Portfolio visual de David Lacalle: política, deportes, temas
+              Portfolio visual de David Canales: política, deportes, temas
               sociales y fiestas tradicionales reunidos en una web donde la
               fotografía tiene todo el protagonismo.
             </p>
