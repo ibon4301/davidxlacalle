@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, Camera, CheckCircle2, Star } from "lucide-react";
+import { ArrowLeft, Camera, RotateCcw, Trash2 } from "lucide-react";
 
 import { getAdminPhotos } from "@/lib/galleryService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import DeactivatePhotoButton from "@/components/admin/DeactivatePhotoButton";
+import RestorePhotoButton from "@/components/admin/RestorePhotoButton";
 
 function getSectionLabel(type: string) {
   const labels: Record<string, string> = {
@@ -18,8 +18,8 @@ function getSectionLabel(type: string) {
   return labels[type] ?? type;
 }
 
-export default async function AdminPhotosPage() {
-  const photos = await getAdminPhotos({ active: true });
+export default async function AdminTrashPhotosPage() {
+  const photos = await getAdminPhotos({ active: false });
 
   return (
     <main className="min-h-screen bg-background px-6 py-28 md:px-12 lg:px-20">
@@ -27,71 +27,63 @@ export default async function AdminPhotosPage() {
         <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <Button asChild variant="ghost" className="mb-6 rounded-full px-0">
-              <Link href="/admin">
+              <Link href="/admin/photos">
                 <ArrowLeft className="mr-2 size-4" />
-                Volver al panel
+                Volver a fotografías
               </Link>
             </Button>
 
             <span className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
-              <Camera className="size-4" />
-              Fotos desde Supabase
+              <Trash2 className="size-4" />
+              Papelera
             </span>
 
-            <h1 className="text-5xl md:text-7xl">Fotografías.</h1>
+            <h1 className="text-5xl md:text-7xl">Fotos desactivadas.</h1>
 
             <p className="mt-5 max-w-2xl text-muted-foreground">
-              Listado de imágenes cargadas desde la tabla{" "}
-              <code>photos</code>. Aquí comprobaremos que el CMS está
-              funcionando antes de crear el formulario de subida.
+              Estas fotografías no aparecen en la web pública, pero siguen
+              guardadas en Supabase. Puedes restaurarlas cuando quieras.
             </p>
           </div>
 
-         <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline" className="rounded-full">
-                <Link href="/admin/photos/trash">Ver desactivadas</Link>
-            </Button>
-
-            <Button asChild className="rounded-full">
-                <Link href="/admin/photos/new">Subir foto</Link>
-            </Button>
-         </div>
+          <Button asChild className="rounded-full">
+            <Link href="/admin/photos">
+              <Camera className="mr-2 size-4" />
+              Ver activas
+            </Link>
+          </Button>
         </div>
 
         {photos.length === 0 ? (
           <Card className="rounded-[2rem]">
             <CardContent className="p-10">
-              <h2 className="text-3xl">Todavía no hay fotos en Supabase.</h2>
+              <h2 className="text-3xl">No hay fotos desactivadas.</h2>
               <p className="mt-4 text-muted-foreground">
-                Inserta alguna fila en la tabla photos para verla aparecer aquí.
+                Cuando quites una foto de la web aparecerá aquí.
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {photos.map((photo) => (
-              <Card
-                key={photo.id}
-                className="overflow-hidden rounded-[2rem]"
-              >
+              <Card key={photo.id} className="overflow-hidden rounded-[2rem]">
                 <div className="relative h-72">
                   <img
                     src={photo.image}
                     alt={photo.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover grayscale"
                   />
+
+                  <div className="absolute inset-0 bg-background/30" />
 
                   <div className="absolute left-4 top-4 flex gap-2">
                     <Badge className="rounded-full bg-background text-foreground">
                       {getSectionLabel(photo.type)}
                     </Badge>
 
-                    {photo.featured && (
-                      <Badge className="rounded-full bg-primary text-primary-foreground">
-                        <Star className="mr-1 size-3" />
-                        Destacada
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="rounded-full bg-background">
+                      Desactivada
+                    </Badge>
                   </div>
                 </div>
 
@@ -105,16 +97,16 @@ export default async function AdminPhotosPage() {
                   </div>
 
                   <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="size-4" />
-                        Activa en la web
-                    </div>
-                    <div className="mt-6 grid gap-3">
-                    <Button asChild variant="outline" className="w-full rounded-full">
-                        <Link href={`/admin/photos/${photo.id}/edit`}>Editar</Link>
-                    </Button>
+                    <RotateCcw className="size-4" />
+                    Lista para restaurar
+                  </div>
 
-                    <DeactivatePhotoButton photoId={photo.id} photoTitle={photo.title} />
-                    </div>
+                  <div className="mt-6">
+                    <RestorePhotoButton
+                      photoId={photo.id}
+                      photoTitle={photo.title}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             ))}

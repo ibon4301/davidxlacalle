@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ImagePlus, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 
+import type { CmsPhoto } from "@/lib/galleryService";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,93 +17,49 @@ const sectionOptions = [
   { value: "fiestas-tradicionales", label: "Fiestas tradicionales" },
 ];
 
-function slugifyFileName(fileName: string) {
-  return fileName
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9.\-_]/g, "");
-}
+type EditPhotoFormProps = {
+  photo: CmsPhoto;
+};
 
-export default function NewPhotoForm() {
+export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
-  const [sectionType, setSectionType] = useState("deportes");
-  const [location, setLocation] = useState("");
-  const [photoDate, setPhotoDate] = useState("2026");
-  const [featured, setFeatured] = useState(false);
-  const [sortOrder, setSortOrder] = useState(1);
-  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState(photo.title);
+  const [sectionType, setSectionType] = useState(photo.type);
+  const [location, setLocation] = useState(photo.location);
+  const [photoDate, setPhotoDate] = useState(photo.date);
+  const [featured, setFeatured] = useState(photo.featured);
+  const [sortOrder, setSortOrder] = useState(photo.order);
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFile = event.target.files?.[0];
-
-    if (!selectedFile) {
-      setFile(null);
-      setPreviewUrl(null);
-      return;
-    }
-
-    setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
-  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
 
     if (!title.trim()) {
-      setErrorMessage("Añade un título para la fotografía.");
-      return;
-    }
-
-    if (!file) {
-      setErrorMessage("Selecciona una imagen.");
+      setErrorMessage("El título no puede estar vacío.");
       return;
     }
 
     try {
-      setIsUploading(true);
+      setIsSaving(true);
 
-      const cleanFileName = slugifyFileName(file.name);
-      const filePath = `${sectionType}/${Date.now()}-${cleanFileName}`;
+      const { error } = await supabase
+        .from("photos")
+        .update({
+          title: title.trim(),
+          section_type: sectionType,
+          location: location.trim() || null,
+          photo_date: photoDate.trim() || null,
+          featured,
+          sort_order: sortOrder,
+        })
+        .eq("id", photo.id);
 
-      const { error: uploadError } = await supabase.storage
-        .from("gallery")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("gallery")
-        .getPublicUrl(filePath);
-
-      const imageUrl = publicUrlData.publicUrl;
-
-      const { error: insertError } = await supabase.from("photos").insert({
-        title: title.trim(),
-        section_type: sectionType,
-        location: location.trim() || null,
-        photo_date: photoDate.trim() || null,
-        image_url: imageUrl,
-        featured,
-        sort_order: sortOrder,
-        is_active: true,
-      });
-
-      if (insertError) {
-        throw insertError;
+      if (error) {
+        throw error;
       }
 
       router.push("/admin/photos");
@@ -110,10 +67,10 @@ export default function NewPhotoForm() {
     } catch (error) {
       console.error(error);
       setErrorMessage(
-        "No se pudo subir la fotografía. Revisa Supabase o las políticas del bucket.",
+        "No se pudo guardar la fotografía. Revisa las políticas de Supabase.",
       );
     } finally {
-      setIsUploading(false);
+      setIsSaving(false);
     }
   }
 
@@ -129,52 +86,33 @@ export default function NewPhotoForm() {
 
         <div className="mb-10">
           <span className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
-            <ImagePlus className="size-4" />
-            Nueva fotografía
+            Editar fotografía
           </span>
 
-          <h1 className="text-5xl md:text-7xl">Subir foto.</h1>
+          <h1 className="text-5xl md:text-7xl">Editar foto.</h1>
 
           <p className="mt-5 max-w-2xl text-muted-foreground">
-            Sube una imagen al bucket de Supabase y crea automáticamente su
-            registro en la tabla de fotografías.
+            Modifica los datos de la imagen, su sección, orden o si debe aparecer
+            como fotografía destacada.
           </p>
         </div>
 
         <Card className="overflow-hidden rounded-[2rem]">
           <CardContent className="grid gap-8 p-6 md:grid-cols-[0.95fr_1.05fr] md:p-8">
             <div className="relative min-h-[420px] overflow-hidden rounded-[1.5rem] border bg-muted">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Vista previa"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full min-h-[420px] flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                  <ImagePlus className="mb-4 size-10" />
-                  <p>Selecciona una imagen para ver la vista previa.</p>
-                </div>
-              )}
+              <img
+                src={photo.image}
+                alt={photo.title}
+                className="h-full w-full object-cover"
+              />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium">Imagen</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full rounded-2xl border bg-background px-4 py-3 text-sm"
-                />
-              </div>
-
               <div>
                 <label className="mb-2 block text-sm font-medium">Título</label>
                 <input
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Ej: Partido en directo"
                   className="w-full rounded-2xl border bg-background px-4 py-3 outline-none transition focus:border-foreground"
                 />
               </div>
@@ -185,7 +123,9 @@ export default function NewPhotoForm() {
                 </label>
                 <select
                   value={sectionType}
-                  onChange={(event) => setSectionType(event.target.value)}
+                  onChange={(event) =>
+                    setSectionType(event.target.value as CmsPhoto["type"])
+                  }
                   className="w-full rounded-2xl border bg-background px-4 py-3 outline-none transition focus:border-foreground"
                 >
                   {sectionOptions.map((option) => (
@@ -228,9 +168,7 @@ export default function NewPhotoForm() {
                   type="number"
                   min={0}
                   value={sortOrder}
-                  onChange={(event) =>
-                    setSortOrder(Number(event.target.value))
-                  }
+                  onChange={(event) => setSortOrder(Number(event.target.value))}
                   className="w-full rounded-2xl border bg-background px-4 py-3 outline-none transition focus:border-foreground"
                 />
               </div>
@@ -252,19 +190,19 @@ export default function NewPhotoForm() {
 
               <Button
                 type="submit"
-                disabled={isUploading}
+                disabled={isSaving}
                 className="w-full rounded-full"
                 size="lg"
               >
-                {isUploading ? (
+                {isSaving ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />
-                    Subiendo fotografía...
+                    Guardando cambios...
                   </>
                 ) : (
                   <>
-                    <Upload className="mr-2 size-4" />
-                    Subir fotografía
+                    <Save className="mr-2 size-4" />
+                    Guardar cambios
                   </>
                 )}
               </Button>

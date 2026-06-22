@@ -139,16 +139,23 @@ export async function getAllGallerySections(): Promise<CmsGallerySection[]> {
   );
 }
 
-export async function getAdminPhotos(): Promise<CmsPhoto[]> {
-  const { data, error } = await supabase
+export async function getAdminPhotos(options?: {
+  active?: boolean;
+}): Promise<CmsPhoto[]> {
+  let query = supabase
     .from("photos")
     .select(
       "id, title, section_type, location, photo_date, image_url, featured, sort_order",
     )
-    .eq("is_active", true)
     .order("section_type", { ascending: true })
     .order("featured", { ascending: false })
     .order("sort_order", { ascending: true });
+
+  if (typeof options?.active === "boolean") {
+    query = query.eq("is_active", options.active);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error loading admin photos from Supabase:", error);
@@ -158,4 +165,23 @@ export async function getAdminPhotos(): Promise<CmsPhoto[]> {
   return (data ?? []).map((photo) =>
     mapSupabasePhotoToCmsPhoto(photo as SupabasePhotoRow),
   );
+}
+
+export async function getAdminPhotoById(
+  id: string,
+): Promise<CmsPhoto | null> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select(
+      "id, title, section_type, location, photo_date, image_url, featured, sort_order",
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error loading admin photo by id:", error);
+    return null;
+  }
+
+  return mapSupabasePhotoToCmsPhoto(data as SupabasePhotoRow);
 }
