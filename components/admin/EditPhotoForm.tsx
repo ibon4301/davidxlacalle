@@ -46,6 +46,18 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
     try {
       setIsSaving(true);
 
+      if (featured) {
+        const { error: featuredError } = await supabase
+          .from("photos")
+          .update({ featured: false })
+          .eq("section_type", sectionType)
+          .neq("id", photo.id);
+
+        if (featuredError) {
+          throw featuredError;
+        }
+      }
+      
       const { error } = await supabase
         .from("photos")
         .update({

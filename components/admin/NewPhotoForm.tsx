@@ -90,6 +90,17 @@ export default function NewPhotoForm() {
 
       const imageUrl = publicUrlData.publicUrl;
 
+      if (featured) {
+        const { error: featuredError } = await supabase
+          .from("photos")
+          .update({ featured: false })
+          .eq("section_type", sectionType);
+
+        if (featuredError) {
+          throw featuredError;
+        }
+      }
+
       const { error: insertError } = await supabase.from("photos").insert({
         title: title.trim(),
         section_type: sectionType,
