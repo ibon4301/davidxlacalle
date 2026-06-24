@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, Save } from "lucide-react";
 
 import type { CmsPhoto } from "@/lib/galleryService";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,15 @@ const sectionOptions = [
   { value: "temas-sociales", label: "Temas sociales" },
   { value: "fiestas-tradicionales", label: "Fiestas tradicionales" },
 ];
+
+function slugifyFileName(fileName: string) {
+  return fileName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9.\-_]/g, "");
+}
 
 type EditPhotoFormProps = {
   photo: CmsPhoto;
@@ -32,8 +41,58 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
   const [featured, setFeatured] = useState(photo.featured);
   const [sortOrder, setSortOrder] = useState(photo.order);
 
+  const [newFile, setNewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(photo.image);
+
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0];
+
+    if (!selectedFile) {
+      setNewFile(null);
+      setPreviewUrl(photo.image);
+      return;
+    }
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setErrorMessage("El archivo seleccionado no es una imagen.");
+      setNewFile(null);
+      setPreviewUrl(photo.image);
+      return;
+    }
+
+    setErrorMessage("");
+    setNewFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
+  }
+
+  async function uploadNewImageIfNeeded() {
+    if (!newFile) {
+      return photo.image;
+    }
+
+    const cleanFileName = slugifyFileName(newFile.name);
+    const filePath = `${sectionType}/${Date.now()}-${cleanFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("gallery")
+      .upload(filePath, newFile, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("gallery")
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +105,8 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
 
     try {
       setIsSaving(true);
+
+      const imageUrl = await uploadNewImageIfNeeded();
 
       if (featured) {
         const { error: featuredError } = await supabase
@@ -66,6 +127,7 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
           section_type: sectionType,
           location: location.trim() || null,
           photo_date: photoDate.trim() || null,
+          image_url: imageUrl,
           featured,
           sort_order: sortOrder,
         })
@@ -80,7 +142,7 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
     } catch (error) {
       console.error(error);
       setErrorMessage(
-        "No se pudo guardar la fotografía. Revisa las políticas de Supabase.",
+        "No se pudo guardar la fotografía. Revisa Supabase, la imagen o las políticas del bucket.",
       );
     } finally {
       setIsSaving(false);
@@ -105,22 +167,56 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
           <h1 className="text-5xl md:text-7xl">Editar foto.</h1>
 
           <p className="mt-5 max-w-2xl text-muted-foreground">
-            Modifica los datos de la imagen, su sección, orden o si debe
-            aparecer como fotografía destacada.
+            Modifica los datos de la imagen, su sección, orden, fotografía
+            destacada o sustituye la imagen actual por una nueva.
           </p>
         </div>
 
         <Card className="overflow-hidden rounded-[2rem]">
           <CardContent className="grid gap-8 p-6 md:grid-cols-[0.95fr_1.05fr] md:p-8">
-            <div className="relative min-h-[420px] overflow-hidden rounded-[1.5rem] border bg-muted">
-              <img
-                src={photo.image}
-                alt={photo.title}
-                className="h-full w-full object-cover"
-              />
+            <div className="space-y-4">
+              <div className="relative min-h-[420px] overflow-hidden rounded-[1.5rem] border bg-muted">
+                <img
+                  src={previewUrl}
+                  alt={title || photo.title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              {newFile && (
+                <p className="rounded-2xl border px-4 py-3 text-sm text-muted-foreground">
+                  Nueva imagen seleccionada:{" "}
+                  <span className="font-medium text-foreground">
+                    {newFile.name}
+                  </span>
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Sustituir imagen
+                </label>
+
+                <div className="rounded-2xl border bg-background p-4">
+                  <label className="flex cursor-pointer items-center justify-center gap-3 rounded-xl border border-dashed px-4 py-6 text-sm text-muted-foreground transition hover:border-foreground hover:text-foreground">
+                    <ImagePlus className="size-5" />
+                    Seleccionar nueva imagen
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Si no seleccionas ninguna imagen, se mantendrá la actual.
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium">Título</label>
                 <input
