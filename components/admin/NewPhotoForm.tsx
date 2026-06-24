@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ImagePlus, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -27,6 +27,7 @@ function slugifyFileName(fileName: string) {
 
 export default function NewPhotoForm() {
   const router = useRouter();
+  const supabase = createClient();
 
   const [title, setTitle] = useState("");
   const [sectionType, setSectionType] = useState("deportes");
@@ -49,6 +50,14 @@ export default function NewPhotoForm() {
       return;
     }
 
+    if (!selectedFile.type.startsWith("image/")) {
+      setErrorMessage("El archivo seleccionado no es una imagen.");
+      setFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    setErrorMessage("");
     setFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
   }
@@ -239,9 +248,7 @@ export default function NewPhotoForm() {
                   type="number"
                   min={0}
                   value={sortOrder}
-                  onChange={(event) =>
-                    setSortOrder(Number(event.target.value))
-                  }
+                  onChange={(event) => setSortOrder(Number(event.target.value))}
                   className="w-full rounded-2xl border bg-background px-4 py-3 outline-none transition focus:border-foreground"
                 />
               </div>

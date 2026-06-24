@@ -1,28 +1,34 @@
 import Link from "next/link";
 import { Camera, Images, Plus } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/adminAuth";
+import LogoutButton from "@/components/admin/LogoutButton";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await requireAdmin();
   return (
     <main className="min-h-screen bg-background px-6 py-28 md:px-12 lg:px-20">
       <section className="mx-auto max-w-6xl">
-        <div className="mb-12">
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
-            <Camera className="size-4" />
-            Panel privado
-          </span>
+        <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+      <div>
+        <span className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
+          <Camera className="size-4" />
+          Panel privado
+        </span>
 
-          <h1 className="max-w-3xl text-5xl md:text-7xl">
-            Gestión de fotografías.
-          </h1>
+        <h1 className="max-w-3xl text-5xl md:text-7xl">
+          Gestión de fotografías.
+        </h1>
 
-          <p className="mt-6 max-w-2xl text-muted-foreground">
-            Desde aquí se gestionarán las imágenes visibles en la web de David
-            Canales: foto destacada, galerías por sección y orden de aparición.
-          </p>
-        </div>
+        <p className="mt-6 max-w-2xl text-muted-foreground">
+          Desde aquí se gestionarán las imágenes visibles en la web de David
+          Canales: foto destacada, galerías por sección y orden de aparición.
+        </p>
+      </div>
+
+      <LogoutButton />
+    </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="rounded-[2rem]">

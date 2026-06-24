@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Camera, RotateCcw, Trash2 } from "lucide-react";
-
 import { getAdminPhotos } from "@/lib/galleryService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RestorePhotoButton from "@/components/admin/RestorePhotoButton";
+import { requireAdmin } from "@/lib/adminAuth";
+
 
 function getSectionLabel(type: string) {
   const labels: Record<string, string> = {
@@ -19,6 +20,7 @@ function getSectionLabel(type: string) {
 }
 
 export default async function AdminTrashPhotosPage() {
+await requireAdmin();
   const photos = await getAdminPhotos({ active: false });
 
   return (

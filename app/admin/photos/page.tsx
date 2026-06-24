@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Camera, CheckCircle2, Star } from "lucide-react";
-
 import { getAdminPhotos } from "@/lib/galleryService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import DeactivatePhotoButton from "@/components/admin/DeactivatePhotoButton";
+import { requireAdmin } from "@/lib/adminAuth";
+import LogoutButton from "@/components/admin/LogoutButton";
 
 function getSectionLabel(type: string) {
   const labels: Record<string, string> = {
@@ -19,6 +20,7 @@ function getSectionLabel(type: string) {
 }
 
 export default async function AdminPhotosPage() {
+  await requireAdmin();
   const photos = await getAdminPhotos({ active: true });
 
   return (
@@ -48,14 +50,16 @@ export default async function AdminPhotosPage() {
           </div>
 
          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline" className="rounded-full">
-                <Link href="/admin/photos/trash">Ver desactivadas</Link>
-            </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link href="/admin/photos/trash">Ver desactivadas</Link>
+          </Button>
 
-            <Button asChild className="rounded-full">
-                <Link href="/admin/photos/new">Subir foto</Link>
-            </Button>
-         </div>
+          <Button asChild className="rounded-full">
+            <Link href="/admin/photos/new">Subir foto</Link>
+          </Button>
+
+          <LogoutButton />
+        </div>
         </div>
 
         {photos.length === 0 ? (

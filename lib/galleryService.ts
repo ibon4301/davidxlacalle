@@ -4,7 +4,7 @@ import {
   type GallerySectionType,
   type SectionPhoto,
 } from "@/lib/gallerySections";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/server";
 
 export type CmsPhoto = SectionPhoto & {
   id: string;
@@ -89,6 +89,8 @@ function getFallbackSection(type: GallerySectionType): CmsGallerySection {
 async function getPhotosFromSupabase(
   type: GallerySectionType,
 ): Promise<CmsPhoto[]> {
+  const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("photos")
     .select(
@@ -142,6 +144,8 @@ export async function getAllGallerySections(): Promise<CmsGallerySection[]> {
 export async function getAdminPhotos(options?: {
   active?: boolean;
 }): Promise<CmsPhoto[]> {
+  const supabase = await createClient();
+
   let query = supabase
     .from("photos")
     .select(
@@ -170,6 +174,8 @@ export async function getAdminPhotos(options?: {
 export async function getAdminPhotoById(
   id: string,
 ): Promise<CmsPhoto | null> {
+  const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("photos")
     .select(

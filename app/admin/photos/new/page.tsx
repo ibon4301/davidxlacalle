@@ -1,5 +1,7 @@
 import NewPhotoForm from "@/components/admin/NewPhotoForm";
+import { requireAdmin } from "@/lib/adminAuth";
 
-export default function NewPhotoPage() {
+export default async function NewPhotoPage() {
+await requireAdmin();
   return <NewPhotoForm />;
 }

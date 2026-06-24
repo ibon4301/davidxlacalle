@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 
 import type { CmsPhoto } from "@/lib/galleryService";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -23,6 +23,7 @@ type EditPhotoFormProps = {
 
 export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
   const router = useRouter();
+  const supabase = createClient();
 
   const [title, setTitle] = useState(photo.title);
   const [sectionType, setSectionType] = useState(photo.type);
@@ -57,7 +58,7 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
           throw featuredError;
         }
       }
-      
+
       const { error } = await supabase
         .from("photos")
         .update({
@@ -104,8 +105,8 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
           <h1 className="text-5xl md:text-7xl">Editar foto.</h1>
 
           <p className="mt-5 max-w-2xl text-muted-foreground">
-            Modifica los datos de la imagen, su sección, orden o si debe aparecer
-            como fotografía destacada.
+            Modifica los datos de la imagen, su sección, orden o si debe
+            aparecer como fotografía destacada.
           </p>
         </div>
 

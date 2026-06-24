@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 type DeactivatePhotoButtonProps = {
@@ -17,6 +17,8 @@ export default function DeactivatePhotoButton({
   photoTitle,
 }: DeactivatePhotoButtonProps) {
   const router = useRouter();
+  const supabase = createClient();
+
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDeactivate() {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, RotateCcw } from "lucide-react";
 
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 type RestorePhotoButtonProps = {
@@ -17,6 +17,8 @@ export default function RestorePhotoButton({
   photoTitle,
 }: RestorePhotoButtonProps) {
   const router = useRouter();
+  const supabase = createClient();
+
   const [isRestoring, setIsRestoring] = useState(false);
 
   async function handleRestore() {
@@ -38,6 +40,7 @@ export default function RestorePhotoButton({
         throw error;
       }
 
+      router.push("/admin/photos");
       router.refresh();
     } catch (error) {
       console.error(error);
