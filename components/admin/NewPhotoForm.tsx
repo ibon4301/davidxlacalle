@@ -10,11 +10,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const sectionOptions = [
+  
   { value: "politica", label: "Política" },
   { value: "deportes", label: "Deportes" },
   { value: "temas-sociales", label: "Temas sociales" },
   { value: "fiestas-tradicionales", label: "Fiestas tradicionales" },
 ];
+
+const MAX_IMAGE_SIZE_MB = 10;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+
+function validateImageFile(file: File): string | null {
+  if (!allowedImageTypes.includes(file.type)) {
+    return "El formato no es válido. Usa JPG, PNG o WEBP.";
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `La imagen pesa demasiado. El máximo permitido es ${MAX_IMAGE_SIZE_MB} MB.`;
+  }
+
+  return null;
+}
 
 function slugifyFileName(fileName: string) {
   return fileName
@@ -50,8 +68,10 @@ export default function NewPhotoForm() {
       return;
     }
 
-    if (!selectedFile.type.startsWith("image/")) {
-      setErrorMessage("El archivo seleccionado no es una imagen.");
+    const validationError = validateImageFile(selectedFile);
+
+    if (validationError) {
+      setErrorMessage(validationError);
       setFile(null);
       setPreviewUrl(null);
       return;

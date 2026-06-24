@@ -47,6 +47,11 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+const MAX_IMAGE_SIZE_MB = 10;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
 
@@ -56,8 +61,10 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
       return;
     }
 
-    if (!selectedFile.type.startsWith("image/")) {
-      setErrorMessage("El archivo seleccionado no es una imagen.");
+    const validationError = validateImageFile(selectedFile);
+
+    if (validationError) {
+      setErrorMessage(validationError);
       setNewFile(null);
       setPreviewUrl(photo.image);
       return;
@@ -66,6 +73,18 @@ export default function EditPhotoForm({ photo }: EditPhotoFormProps) {
     setErrorMessage("");
     setNewFile(selectedFile);
     setPreviewUrl(URL.createObjectURL(selectedFile));
+  }
+
+  function validateImageFile(file: File): string | null {
+    if (!allowedImageTypes.includes(file.type)) {
+      return "El formato no es válido. Usa JPG, PNG o WEBP.";
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return `La imagen pesa demasiado. El máximo permitido es ${MAX_IMAGE_SIZE_MB} MB.`;
+    }
+
+    return null;
   }
 
   async function uploadNewImageIfNeeded() {
